@@ -7,9 +7,8 @@ int sort()
 		while(j<10){
 			if(a[j]<=a[j+1])
 				a[j]=0;
-			else
-				swap(a,j,j+1);
 		}
+		swap(a[i],a[j],0);
 	}
 	return 0;
 }

@@ -18,11 +18,11 @@ void addnode(struct node* father,struct node *child){
 }
 struct node* setnode(char *type,char *text,int linum){
 	struct node *temp=(struct node *)malloc(sizeof(node));
-        strcpy(temp->type,type);
+  strcpy(temp->type,type);
 	strcpy(temp->text,text);
-        temp->linenum=linum;
+  temp->linenum=linum;
 	temp->childnum=0;
-        return temp;
+  return temp;
 }
 void printtree(struct node *p,int height){
 	if(p==NULL||iserror==1)
@@ -39,7 +39,7 @@ void printtree(struct node *p,int height){
 	else if(strcmp(p->type,"FLOAT")==0)
 		printf("%s: %s\n",p->type,p->text);
 	else if(strcmp(p->type,"")!=0)
-		printf("%s \n",p->type);
+		printf("%s (%d)\n",p->type,p->linenum);
 	for(int i=0;i<p->childnum;i++)
 		printtree(p->child[i],height+1);
 }

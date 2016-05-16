@@ -3,6 +3,13 @@
 #include "syntax.tab.h"
 #include "tree.h"
 #include "lexicial.h"
+	int yycolumn = 1;
+	 #define YY_USER_ACTION \
+	     yylloc.first_line = yylloc.last_line = yylineno; \
+			 yylloc.first_column = yycolumn; \
+			 yylloc.last_column = yycolumn + yyleng - 1; \
+			 yycolumn += yyleng;  
+
 %}
 delim [ \t]
 ws {delim}+
@@ -16,7 +23,8 @@ id {letter}({letter}|{digit})*
 relop >|<|>=|<=|==|!=
 %%
 {delim} {}
-\r\n { yylineno++;}
+[\n] { yylineno++;}
+[\r] {}
 int|float { yylval=(struct node *)setnode("TYPE",yytext,yylineno); return TYPE;}
 {relop} { yylval=(struct node *)setnode("RELOP",yytext,yylineno);return RELOP;}
 return { yylval=(struct node *)setnode("RETURN",yytext,yylineno);return RETURN;}
