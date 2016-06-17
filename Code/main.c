@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "lex.yy.c"
 #include"semantics.h"
+#include"translate.h"
 //#include "tree.h"
 extern FILE* yyin;
 extern struct node* root;
@@ -19,6 +20,12 @@ int main(int argc,char** argv){
 		printtree(root,0);
 		semantic_analysis(root);
 		pronotdef();
+		printf("fenxijieshu\n");
+		code* temp=translate(root);
+		printf("fanyijieshu\n");
+		printcode(temp,"/home/tang/Desktop/hhhh.ir");
+		printf("zhongjiandaimajieshu\n");
+		mipscode(temp,"/home/tang/Desktop/result.s");
 	}
 	return 0;
 }

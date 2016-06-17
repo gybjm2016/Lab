@@ -12,4 +12,5 @@ typedef struct node node;
 void addnode(struct node* father,struct node* child);
 struct node* setnode(char *type,char *text,int linum);
 void printtree(struct node *p,int height);
+int myatoi(char* p);
 #endif

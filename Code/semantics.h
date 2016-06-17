@@ -24,6 +24,7 @@ struct FieldList_{
 struct charatable{
 	char* name;
 	Type charatype;
+	int  ispara;
 	struct charatable* next;
 };
 struct dectable{
@@ -32,3 +33,5 @@ struct dectable{
 	Type funcdeclare;
 	struct dectable* next;
 };
+struct charatable *head;
+struct charatable* search(char* nam);

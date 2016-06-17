@@ -1,6 +1,6 @@
 #include"semantics.h"
 extern  Type typedistin(struct node* h);
-extern struct charatable* processVardec(Type lasttype,struct node* h,int flag);
+extern struct charatable* processVardec(Type lasttype,struct node* h,int flag,int paraflag);
 extern FieldList prodeflist(struct node* ,int i);
 extern void proExtdeflist(struct node* h);
 extern FieldList proArgs(struct node* h);
@@ -23,6 +23,7 @@ void addtodec(int k,Type chara){
 void add(char* nam,Type chara){
 	struct charatable *temp=(struct charatable*)malloc(sizeof(struct charatable));
 	temp->name=nam;
+	temp->ispara=0;
 	temp->charatype=chara;
 	if(head==NULL)
 		head=temp;
@@ -58,7 +59,6 @@ void semantic_analysis(struct node* h){
 		return;
 	if(strcmp(h->type,"ExtDefList")==0){
 		proExtdeflist(h);
-		return;
 	}
 	else{
 	int i=0;
@@ -73,7 +73,7 @@ void pronotdef(){
 			printf("Error type 18 at line %d: Udefined function %s\n",p->lnum,p->funcdeclare->u.function->name);
 	}
 }
-struct charatable*  processVardec(Type lasttype,struct node* h,int flag){
+struct charatable*  processVardec(Type lasttype,struct node* h,int flag,int parflag){
 	Type result=lasttype;
 	while(strcmp(h->child[0]->type,"ID")!=0){
 		Type temp=(Type)malloc(sizeof(struct Type_));
@@ -88,6 +88,8 @@ struct charatable*  processVardec(Type lasttype,struct node* h,int flag){
 			printf("Error type 3 at lint %d: redifined variable %s\n",h->child[0]->linenum,h->child[0]->text);
 		else{
 			add(h->child[0]->text,result);
+			struct charateble* paraid=search(h->child[0]->text);
+			//paraid->ispara=parflag;
 		}
 	}
 	struct charatable* temp2=(struct charatable*)malloc(sizeof(struct charatable));
@@ -143,11 +145,11 @@ FieldList prodef(struct node* h,int flag) {
 	while(h->childnum>1){
 		if(h->child[0]->childnum==3&&flag==1){
 			printf("Error type 15 at line %d: field can not ASSIGNMENT",h->child[0]->child[1]->linenum);
-			continue;
 		}
 		FieldList temp=(FieldList)malloc(sizeof(struct FieldList_));
-		temp->name=processVardec(lasttype,h->child[0]->child[0],flag)->name;
-		temp->type=lasttype;
+		struct charatable *table = processVardec(lasttype,h->child[0]->child[0],flag,0);
+		temp->name = table->name;
+		temp->type=table->charatype;
 		if(headtemp==NULL)
 			headtemp=temp;
 		else{
@@ -164,11 +166,11 @@ FieldList prodef(struct node* h,int flag) {
 	}
 	if(h->child[0]->childnum==3&&flag==1){
 		printf("Error type 15 at line %d: field can not ASSIGNMENT\n",h->child[0]->child[1]->linenum);
-		return headtemp;
 	}
 	FieldList temp=(FieldList)malloc(sizeof(struct FieldList_));
-	temp->name=processVardec(lasttype,h->child[0]->child[0],flag)->name;
-	temp->type=lasttype;
+	struct charatable *table = processVardec(lasttype,h->child[0]->child[0],flag,0);
+	temp->name = table->name;
+	temp->type=table->charatype;
 	if(headtemp==NULL)
 		headtemp=temp;
 	else{
@@ -180,7 +182,6 @@ FieldList prodef(struct node* h,int flag) {
 			if(flag==1)
 			printf("Error type 15 at line %d: Redifined field %s\n",h->child[0]->child[0]->child[0]->linenum,temp->name);
 	}
-//	printf("end def\n");
 	return headtemp;
 }
 FieldList prodeflist(struct node* h,int flag){
@@ -188,6 +189,10 @@ FieldList prodeflist(struct node* h,int flag){
 	FieldList result=NULL;
 	while(h->childnum==2){
 		FieldList temp=prodef(h->child[0],flag);
+		if(temp==NULL){
+			h=h->child[1];
+			continue;
+		}
 		FieldList q=temp;
 		if(result==NULL){
 			result=temp;
@@ -201,7 +206,7 @@ FieldList prodeflist(struct node* h,int flag){
 					break;
 				}
 			if(q==NULL){
-				for(q=temp;temp->tail!=NULL;)
+				for(q=temp;q->tail!=NULL;)
 					q=q->tail;
 				q->tail=result;
 				result=temp;
@@ -218,7 +223,7 @@ FieldList proVarlist(struct node* h,int flag){
 	while(h->childnum>1){
 		FieldList temp1=(FieldList)malloc(sizeof(struct FieldList_));
 		Type temp=typedistin(h->child[0]->child[0]);
-		temp1->name=processVardec(temp,h->child[0]->child[1],flag)->name;
+		temp1->name=processVardec(temp,h->child[0]->child[1],flag,1)->name;
 		temp1->type=temp;
 		if(result==NULL){
 			result=temp1;
@@ -236,7 +241,7 @@ FieldList proVarlist(struct node* h,int flag){
 	}
 	FieldList temp1=(FieldList)malloc(sizeof(struct FieldList_));
 	Type temp=typedistin(h->child[0]->child[0]);
-	temp1->name=processVardec(temp,h->child[0]->child[1],flag)->name;
+	temp1->name=processVardec(temp,h->child[0]->child[1],flag,1)->name;
 	temp1->type=temp;
 	if(result==NULL){
 		result=temp1;
@@ -259,12 +264,12 @@ Type proFundec(Type lasttype,struct node* h,int flag){
 	result->type=lasttype;
 	if(h->childnum==4)
 		if(flag==0)
-			result->tail=proVarlist(h->child[2],1);
-		else
 			result->tail=proVarlist(h->child[2],0);
+		else
+			result->tail=proVarlist(h->child[2],1);
 	temp->kind=FUNC;
 	temp->u.function=result;
-	if(flag==0){
+	if(flag==1){
 		if(searchindec(result->name)==NULL){
 			addtodec(h->child[0]->linenum,temp);
 		}
@@ -330,19 +335,19 @@ void proExtdef(struct node* h){
 	if(strcmp(h->child[1]->type,"ExtDecList")==0){
 		h=h->child[1];
 		while(h->childnum==3){
-			processVardec(lasttype,h->child[0],0);
+			processVardec(lasttype,h->child[0],0,0);
 			h=h->child[2];
 		}
-		processVardec(lasttype,h->child[0],0);
+		processVardec(lasttype,h->child[0],0,0);
 	}
 	else if(strcmp(h->child[1]->type,"SEMI")==0){
 		//typedistin(h->child[0]);
 	}
 	else if(strcmp(h->child[2]->type,"SEMI")==0){
-		proFundec(lasttype,h->child[1],0);
+		proFundec(lasttype,h->child[1],1);
 	}
 	else {
-		proFundec(lasttype,h->child[1],1);
+		proFundec(lasttype,h->child[1],0);
 		proCompst(lasttype,h->child[2]);
 	}
 }
@@ -405,20 +410,18 @@ int equal(Type a,Type b){
 	}
 }
 Type proExp(struct node* h){
-	printf("h->num:%d\n",h->childnum);
 	if(h->childnum==3&&strcmp(h->child[0]->type,"Exp")==0&&strcmp(h->child[2]->type,"Exp")==0){
 		if(strcmp(h->child[1]->type,"ASSIGNOP")!=0){
-				printf("operandtype:%s\n",h->child[1]->type);
 			Type temp1=proExp(h->child[0]);
 			Type temp2=proExp(h->child[2]);
 			if(temp1==NULL||temp2==NULL)
 				return NULL;
 			if(temp1->kind!=BASIC||temp2->kind!=BASIC)
-				printf("1Error type 7 at Line %d: Type mismatched for operands\n",h->child[1]->linenum);
+				printf("Error type 7 at Line %d: Type mismatched for operands\n",h->child[1]->linenum);
 			else if(strcmp(temp1->u.basic,temp2->u.basic)!=0)
-				printf("2Error type 7 at Line %d: Type mismatched for operands\n",h->child[1]->linenum);
+				printf("Error type 7 at Line %d: Type mismatched for operands\n",h->child[1]->linenum);
 			else if(strcmp(temp1->u.basic,"float")==0&&(strcmp(h->child[1]->type,"AND")==0||strcmp(h->child[1]->type,"OR")==0))
-				printf("3Error type 7 at Line %d: Type mismatched for operands\n",h->child[1]->linenum);
+				printf("Error type 7 at Line %d: Type mismatched for operands\n",h->child[1]->linenum);
 			else return temp1;
 			return NULL;
 		}
@@ -507,10 +510,6 @@ Type proExp(struct node* h){
 				return NULL;
 			}
 			else{
-				if(temp1->charatype->kind!=ARRAY)
-					printf("dddd %s\n",temp1->name);
-				else
-					printf("ddddddddddddddd\n");
 				return temp1->charatype;
 			}
 		}
@@ -532,7 +531,7 @@ Type proExp(struct node* h){
 		if(temp1==NULL)
 			return NULL;
 		if(temp1->kind!=ARRAY){
-			printf("Error type 10 at line %d: not a array",h->child[0]->linenum);
+			printf("Error type 10 at line %d: not a array\n",h->child[0]->linenum);
 			return NULL;
 		}
 		else{
@@ -540,11 +539,10 @@ Type proExp(struct node* h){
 			if(temp2==NULL)
 				return NULL;
 			if(!(temp2->kind==BASIC&&strcmp(temp2->u.basic,"int")==0)){
-				printf("Error type 12 at line %d: not a integer",h->child[0]->linenum);
+				printf("Error type 12 at line %d: not a integer\n",h->child[0]->linenum);
 				return NULL;
 			}
 			else{
-				printf("ArrayType: %d \n",temp1->u.array.elem);
 				return temp1->u.array.elem;
 			}
 		}
@@ -560,10 +558,11 @@ Type proExp(struct node* h){
 			if(searchlist(p,h->child[2]->text)==0)
 				printf("Error type 14 at line %d: Non-existent field %s\n",h->child[1]->linenum,h->child[2]->text);
 			else{
-				for(;p!=NULL;p=p->tail)
-					if(strcmp(p->name,h->child[2]->text)==0)
+				FieldList hhh=temp1->u.structure;
+				for(;hhh!=NULL;hhh=hhh->tail)
+					if(strcmp(hhh->name,h->child[2]->text)==0)
 						break;
-				return p->type;
+				return hhh->type;
 			}
 		}
 	}
