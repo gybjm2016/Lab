@@ -1,0 +1,15 @@
+int myadd(int a,int b,int c,int d,int e){
+	write(a);
+	write(b);
+	write(c);
+	write(d);
+	write(e);
+	return a+b+c+d+e;
+}
+
+int main(){
+	int x=read(),y=read(),m=read(),n=read(),o=read();
+	int g=myadd(x,y,m,n,o);
+	write(g);
+	return 0;
+}

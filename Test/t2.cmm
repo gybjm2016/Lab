@@ -1,0 +1,5 @@
+int main(){
+	int a=1,b=3,c=read();
+	write(a+b+c);
+	return 0;
+}

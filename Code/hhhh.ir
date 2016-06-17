@@ -1,0 +1,53 @@
+FUNCTION myadd :
+PARAM a
+PARAM b
+PARAM c
+PARAM d
+PARAM e
+t5 := a
+WRITE t5
+t6 := b
+WRITE t6
+t7 := c
+WRITE t7
+t8 := d
+WRITE t8
+t9 := e
+WRITE t9
+t17 := a
+t18 := b
+t15 := t17 + t18
+t16 := c
+t13 := t15 + t16
+t14 := d
+t11 := t13 + t14
+t12 := e
+t10 := t11 + t12
+RETURN t10
+FUNCTION main :
+READ t19
+x := t19
+READ t20
+y := t20
+READ t21
+m := t21
+READ t22
+n := t22
+READ t23
+o := t23
+t25 := x
+t26 := y
+t27 := m
+t28 := n
+t29 := o
+ARG t29
+ARG t28
+ARG t27
+ARG t26
+ARG t25
+t24 := CALL myadd
+g := t24
+t30 := g
+WRITE t30
+t31 := #0
+RETURN t31

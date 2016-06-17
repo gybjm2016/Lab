@@ -23,9 +23,9 @@ int main(int argc,char** argv){
 		printf("fenxijieshu\n");
 		code* temp=translate(root);
 		printf("fanyijieshu\n");
-		printcode(temp,"/home/tang/Desktop/hhhh.ir");
+		printcode(temp,"hhhh.ir");
 		printf("zhongjiandaimajieshu\n");
-		mipscode(temp,"/home/tang/Desktop/result.s");
+		mipscode(temp,"result.s");
 	}
 	return 0;
 }

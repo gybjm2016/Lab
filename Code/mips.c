@@ -131,6 +131,7 @@ void mipscode(code* h,char* filename){
 	fprintf(fp,"move $v0, $0\n");
 	fprintf(fp,"jr $ra\n");
 	fprintf(fp,"\n");
+	printf("begin hhh\n");
 	code* p=h;
 	code *tempcode;
 	while(p!=NULL){
@@ -221,17 +222,24 @@ void mipscode(code* h,char* filename){
 					fprintf(fp,"ble %s, %s, %s\n",reg(fp,p->word.u.ifgoto.op1,1),reg(fp,p->word.u.ifgoto.op3,2),getop(p->word.u.ifgoto.op4));
 				break;
 			case FUNCTION:
+				fprintf(fp, "\n");
 				fprintf(fp,"%s:\n",getop(p->word.u.ret.op1));
 				stackoffset=0;
 				break;
 			case ARG:
-				if(parnum<=3){
-					fprintf(fp,"move $a%d, %s\n",parnum,reg(fp,p->word.u.ret.op1,1));
-					parnum++;
-				}
-				else{
-					fprintf(fp,"sw %s, %d($sp)",reg(fp,p->word.u.ret.op1,1),stackoffset+4+(parnum-4)*4); 
-					parnum++;
+				while(p->next->word.kind == ARG)p=p->next;
+				tempcode = p;
+				parnum = 0;
+				while(tempcode->word.kind==ARG){
+					if(parnum<=3){
+						fprintf(fp,"move $a%d, %s\n",parnum,reg(fp,tempcode->word.u.ret.op1,1));
+						parnum++;
+					}
+					else{
+						fprintf(fp,"sw %s, %d($sp)\n",reg(fp,tempcode->word.u.ret.op1,1),stackoffset+4+(parnum-4)*4); 
+						parnum++;
+					}
+					tempcode = tempcode->pre;
 				}
 				break;
 			case PARAM:
@@ -242,21 +250,22 @@ void mipscode(code* h,char* filename){
 					tempcode=tempcode->next;
 				}
 				tempcode = p;
-				if(parnum<4)
+				if(parnum<=4)
 					stackoffset = 0;
 				else
-					stackoffset = parnum*4; 
+					stackoffset = (parnum-4)*4; 
 				for(int i=0;i<parnum;i++){
-					setoffset(p->word.u.ret.op1,stackoffset);
+					setoffset(tempcode->word.u.ret.op1,stackoffset);
 					stackoffset+=4;
+					tempcode=tempcode->next;
 				}
-
+				tempcode = p;
 				for(int i=0;i<4 && tempcode->word.kind == PARAM;i++){
 					fprintf(fp, "sw $a%d, %d($sp)\n",i,getoffset(tempcode->word.u.ret.op1));
-				tempcode = tempcode->next;
+					tempcode = tempcode->next;
 				}
-				if(parnum>4){
-					for(int i=4;i<parnum;++i){
+				if(parnum>=4){
+					for(int i=4;i<=parnum;++i){
 						fprintf(fp, "lw $t1, %d($sp)\n", (i-4)*4);
 						fprintf(fp, "sw $t1, %d($sp)\n", getoffset(tempcode->word.u.ret.op1));
 						tempcode = tempcode->next;
